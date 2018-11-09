@@ -18,3 +18,4 @@ print (len(r))
 g=itertools.combinations(range(len(r)), 4 )
 for c in range(calculate_combinations(len(r), 4 )):
     print (next(g))
+print ("end")
