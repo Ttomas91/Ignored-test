@@ -1,5 +1,5 @@
 from his_from_csv import  history_from_csv as hfc
-
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -8,7 +8,7 @@ import patsy as pt
 import sklearn.linear_model as lm
 import os
 import itertools
-
+from pylab import *
 from math import factorial
 
 from pandas import date_range,Series,DataFrame,read_csv, qcut
@@ -57,8 +57,9 @@ def OnePointValue(Symbol,lot,dat,tim,tf):
 
 d="2018.01.14"
 t='11:00'   
-l=10
-inc=20
+le=100
+fo=50
+inc=10
 timeframe='60'
 
 tradeSym="AUDUSD,EURUSD,GBPUSD,NZDUSD,USDCAD,USDCHF,USDJPY"
@@ -67,7 +68,7 @@ tradeSym="AUDUSD,EURUSD,GBPUSD,NZDUSD,USDCAD,USDCHF,USDJPY"
 Symbols=tradeSym.split(',')
 
 base=[hfc(x,timeframe) for x in Symbols]
-dbase=[x.get_history(d,t,l,'Open') for x in base]
+dbase=[x.get_history(d,t,le+fo,'Open') for x in base]
 rost=[[x-dbase[y][0] for x in dbase[y]] for y in range(len(dbase))]
 
 for s in range(len(Symbols)):
@@ -85,40 +86,35 @@ for c in range(1):#calculate_combinations(len(Symbols), 4 )):
     kou=next(g)
     for e in range(len(kou)):
         d[Symbols[kou[e]]]=rost[kou[e]]
-    d['y']=[x*inc for x in range(l)]
+    d['y']=[x*inc for x in range(le+fo)]
     #d={'x1':db1,'x2':db2,'x3':db3,'x4':db4,'y':[x*1.2 for x in range(l)]}
     #print (d)
     
     df = pd.DataFrame(data=d)
     #print (df)
 
-    x = df.iloc[:,:-1]
-    #print (x)
+    x = df.iloc[:le,:-1]
+    print (x)
     # y - таблица с исходными данными зависимой переменной
-    y = df.iloc[:,-1]
-    #print (y)
+    y = df.iloc[:le,-1]
+    print (y)
+    
     skm=lm.LinearRegression()
     skm.fit(x,y)
     print (skm.intercept_)
     print ("-"*8)
     print (skm.coef_)
     z=[]
-    for x in range(l):
+    for x in range(le+fo):
         coi=0
         for e in range(len(kou)):
             coi+=d[Symbols[kou[e]]][x]*skm.coef_[e]
         z.append(coi+skm.intercept_)
     d["z"]=z
     df = pd.DataFrame(data=d)
+    
+    #'''  Визуализация
     print (df)
-    '''
-    df=df.cumsum()
-    plt.figure()
-    df.plot()
-    plt.legend(loc='best');
-    df.plot(legend=False);
-    '''
-    ts = Series(randn(1000), index=date_range('1/1/2000', periods=1000))
-    ts = ts.cumsum()
-    plt.plot();
-    print ("1111")
+    df.plot();
+    show()
+    
