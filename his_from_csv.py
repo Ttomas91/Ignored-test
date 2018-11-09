@@ -4,20 +4,30 @@ class history_from_csv:
     
     def __init__(self, symbol, tf):
 
-        self.file="history//"+symbol+tf+".csv"
+        self.file="history/"+symbol+tf+".csv"
 
-    def get_history(self, date, time, len_bar):
+    def get_history(self, date, time, len_bar, typ):
         
         self.date=str(date)
         self.time=str(time)
         self.len_bar=len_bar
-
+        self.datas=0
+        if typ=="Open":
+            self.datas=2
+        if typ=="High":
+            self.datas=3
+        if typ=="Low":
+            self.datas=4
+        if typ=="Close":
+            self.datas=5
+        if typ=="Volume":
+            self.datas=6
         with open(self.file,"r") as f_obj:
 
-            self.db=self.csv_reader(f_obj)
+            self.db=self.csv_reader(f_obj,self.datas)
             return self.db
 
-    def csv_reader(self, file_obj):
+    def csv_reader(self, file_obj, i):
         self.reader = csv.reader(file_obj)
         
         self.data_read = []
@@ -35,7 +45,10 @@ class history_from_csv:
                 self.cl=True
                 
             if self.cl==True and self.w_cou!=0:
-                self.data_read.append(self.row)
+                if self.datas>1 and self.datas<=6 :
+                    self.data_read.append(float(self.row[i]))
+                else:
+                    self.data_read.append(self.row)
                 self.w_cou=self.w_cou-1
                 
             if self.cl==True and self.w_cou==0:
