@@ -62,7 +62,6 @@ def NextIter(sdig,datm):
     else:tim[0]=str(int(tim[0])+int(sdig))
     if int(tim[0])>=24:
         power=(int(tim[0])//24)
-        print (power)
         if int(tim[0])-24*power <10:
             tim[0]="0"+str(int(tim[0])-24*power)
         else: tim[0]=str(int(tim[0])-24*power)
@@ -107,8 +106,8 @@ def NextIter(sdig,datm):
 d="2016.12.30"
 t='00:00' 
 datatime=[d,t]
-le=2
-fo=1
+le=100
+fo=50
 inc=10
 timeframe='60'
 
@@ -125,7 +124,7 @@ tradeSym="AUDUSD,EURUSD,GBPUSD,NZDUSD,USDCAD,USDCHF,USDJPY"
 
 
 Symbols=tradeSym.split(',')
-
+#print (Symbols.index('NZDUSD'))
 base=[hfc(x,timeframe) for x in Symbols]
 dbase=[x.get_history(datatime,le+fo,'Open') for x in base]
 rost=[[x-dbase[y][0] for x in dbase[y]] for y in range(len(dbase))]
@@ -140,7 +139,9 @@ for s in range(len(Symbols)):
  
 
 g=itertools.combinations(range(len(Symbols)), 4 )
-for c in range(1):#calculate_combinations(len(Symbols), 4 )):
+tmp_collect_sintetic={}
+tmp_coll_sin=[]
+for c in range(calculate_combinations(len(Symbols), 4 )):
     d={}
     kou=next(g)
     for e in range(len(kou)):
@@ -153,15 +154,30 @@ for c in range(1):#calculate_combinations(len(Symbols), 4 )):
     
     skm=lm.LinearRegression()
     skm.fit(x,y)
-    print (skm.intercept_)
     print ("-"*8)
+    print (skm.intercept_)
     print (skm.coef_)
+    print ("-"*8)
+    #--------- запоминаем формулу синтетика
+    tmp_sin={}
+    for e in range(len(kou)):
+        tmp_sin[Symbols[kou[e]]]=skm.coef_[e]
+    tmp_sin["err"]=skm.intercept_
+    #---------
+    
     z=[]
+    sko=0
     for x in range(le+fo):
         coi=0
         for e in range(len(kou)):
             coi+=d[Symbols[kou[e]]][x]*skm.coef_[e]
         z.append(coi+skm.intercept_)
+        sko+=(d['y'][x]-z[x])**2
+    sko=sko/(le+fo)
+    print(sko)
+    tmp_sin["SKO"]=sko
+    
+    tmp_coll_sin.append(tmp_sin)
     d["z"]=z
     df = pd.DataFrame(data=d)
     '''
@@ -170,5 +186,16 @@ for c in range(1):#calculate_combinations(len(Symbols), 4 )):
     df.plot();
     show()
     '''
+collect_sintetic = pd.DataFrame(data=tmp_coll_sin)
+print(collect_sintetic["SKO"])
+'''
+tmp_collect_sintetic["DT"]=datatime
+tmp_collect_sintetic["Len"]=le
+tmp_collect_sintetic["Fow"]=fo
+tmp_collect_sintetic["Inc"]=inc
 
+tmp_collect_sintetic["Collect"]=tmp_coll_sin
+collect_sintetic = pd.Series(data=tmp_collect_sintetic)
+print(collect_sintetic["Collect"])
+'''
 
