@@ -107,17 +107,17 @@ def NormalizeLot(coeff):
     
 
 portLot=1        
-d="2016.12.30"
-t='00:00' 
+d="2010.01.18"
+t='08:00' 
 datatime=[d,t]
 le=100
 fo=50
 inc=10
 timeframe='60'
 
-print (datatime)
-datatime=NextIter(53,datatime)
 '''
+datatime=NextIter(53,datatime)
+
 print ("-*-"*8)
 print (datatime)
 k=hfc("EURUSD",timeframe)
@@ -130,92 +130,102 @@ tradeSym="AUDUSD,EURUSD,GBPUSD,NZDUSD,USDCAD,USDCHF,USDJPY"
 Symbols=tradeSym.split(',')
 #print (Symbols.index('NZDUSD'))
 base=[hfc(x,timeframe) for x in Symbols]
-dbase=[x.get_history(datatime,le+fo,'Open') for x in base]
-rost=[[x-dbase[y][0] for x in dbase[y]] for y in range(len(dbase))]
-
-for s in range(len(Symbols)):
-    if Symbols[s][:3]=="JPY" or Symbols[s][-3:]=="JPY":
-        o=OnePointValue(Symbols[s],1,datatime,timeframe)
-        rost[s]=[toFixed(x*100*o,4) for x in rost[s]]
-    else:
-        o=OnePointValue(Symbols[s],1,datatime,timeframe)
-        rost[s]=[toFixed(x*10000*o,4) for x in rost[s]]
- 
-
-g=itertools.combinations(range(len(Symbols)), 4 )
-tmp_collect_sintetic={}
-tmp_coll_sin=[]
+count_ver_summ=0
 count_ver_rost=0
-for c in range(calculate_combinations(len(Symbols), 4 )):
-    d={}
-    kou=next(g)
-    for e in range(len(kou)):
-        d[Symbols[kou[e]]]=rost[kou[e]]
-    d['y']=[x*inc for x in range(le+fo)]
-    
-    df = pd.DataFrame(data=d)
-    x = df.iloc[:le,:-1]
-    y = df.iloc[:le,-1]
-    
-    skm=lm.LinearRegression()
-    skm.fit(x,y)
-    '''
-    print ("-"*8)
-    print (skm.intercept_)
-    print (skm.coef_)
-    print ("-"*8)
-    print ("n_coeff ",n_coeff)
-    print ("-"*8)
-    '''
-    n_coeff=NormalizeLot(skm.coef_)
-    #--------- запоминаем формулу синтетика
-    tmp_sin={}
-    for e in range(len(kou)):
-        tmp_sin[Symbols[kou[e]]]=n_coeff[e]#skm.coef_[e]
-    tmp_sin["err"]=skm.intercept_
-    #---------
-    
-    z=[]
-    sko=0
-    coe_r2_bek=skm.score(x,y)
-    x = df.iloc[:,:-1]
-    y = df.iloc[:,-1]
-    z1 = skm.predict(x)
-    coe_r2_summ=skm.score(x,y)
-    x = df.iloc[le:,:-1]
-    y = df.iloc[le:,-1]
-    coe_r2_fow=skm.score(x,y)
-    print ('bec = ',coe_r2_bek,' |  foward = ',coe_r2_fow, " |  Summ = ",coe_r2_summ)
-    for x in range(le+fo):
-        coi=0
+count_ver=0
+profit=0
+for g in range(100):
+    datatime=NextIter(41,datatime)
+    print(g,datatime)
+    dbase=[x.get_history(datatime,le+fo,'Open') for x in base]
+    rost=[[x-dbase[y][0] for x in dbase[y]] for y in range(len(dbase))]
+
+    for s in range(len(Symbols)):
+        if Symbols[s][:3]=="JPY" or Symbols[s][-3:]=="JPY":
+            o=OnePointValue(Symbols[s],1,datatime,timeframe)
+            rost[s]=[toFixed(x*100*o,4) for x in rost[s]]
+        else:
+            o=OnePointValue(Symbols[s],1,datatime,timeframe)
+            rost[s]=[toFixed(x*10000*o,4) for x in rost[s]]
+     
+
+    g=itertools.combinations(range(len(Symbols)), 5 )
+    tmp_collect_sintetic={}
+    tmp_coll_sin=[]
+    for c in range(calculate_combinations(len(Symbols), 5 )):
+        d={}
+        kou=next(g)
         for e in range(len(kou)):
-            coi+=d[Symbols[kou[e]]][x]*skm.coef_[e]
-        z.append(coi+skm.intercept_)
-        sko+=(d['y'][x]-z[x])**2
+            d[Symbols[kou[e]]]=rost[kou[e]]
+        d['y']=[x*inc for x in range(le+fo)]
         
-    sko=sko/(le+fo)
-    #print(sko)
-    tmp_sin["SKO"]=sko
-    
-    #for x in range(le+fo):
-        #print ("z1 = ",z1[x],'z_orig = ',z[x])
+        df = pd.DataFrame(data=d)
+        x = df.iloc[:le,:-1]
+        y = df.iloc[:le,-1]
         
-    if z[le+fo-1]-z[le]>0:
-        count_ver_rost+=1
-    tmp_coll_sin.append(tmp_sin)
-    d["z"]=z
-    df = pd.DataFrame(data=d)
-    
-    if c==31:
+        skm=lm.LinearRegression()
+        skm.fit(x,y)
+        '''
+        print ("-"*8)
+        print (skm.intercept_)
+        print (skm.coef_)
+        print ("-"*8)
+        print ("n_coeff ",n_coeff)
+        print ("-"*8)
+        '''
+        n_coeff=NormalizeLot(skm.coef_)
+        #--------- запоминаем формулу синтетика
+        tmp_sin={}
+        for e in range(len(kou)):
+            tmp_sin[Symbols[kou[e]]]=n_coeff[e]#skm.coef_[e]
+        tmp_sin["err"]=skm.intercept_
+        #---------
         
-        # Визуализация
-        print (df)
-        df.plot();
-        show()
-    
-print (count_ver_rost)
+        z=[]
+        sko=0
+        coe_r2_bek=skm.score(x,y)
+        x = df.iloc[:,:-1]
+        y = df.iloc[:,-1]
+        z1 = skm.predict(x)
+        coe_r2_summ=skm.score(x,y)
+        x = df.iloc[le:,:-1]
+        y = df.iloc[le:,-1]
+        coe_r2_fow=skm.score(x,y)
+        #print ('bec = ',coe_r2_bek,' |  foward = ',coe_r2_fow, " |  Summ = ",coe_r2_summ)
+        for x in range(le+fo):
+            coi=0
+            for e in range(len(kou)):
+                coi+=d[Symbols[kou[e]]][x]*n_coeff[e]
+            z.append(coi)
+            
+        
+        #for x in range(le+fo):
+            #print ("z1 = ",z1[x],'z_orig = ',z[x])
+        count_ver+=1
+        if coe_r2_bek>0.95:
+            count_ver_summ+=1
+            profit+=z[le+fo-1]-z[le]
+            if z[le+fo-1]-z[le]>0:
+                count_ver_rost+=1
+        tmp_coll_sin.append(tmp_sin)
+        d["z"]=z
+        df = pd.DataFrame(data=d)
+        '''
+        if c==31:
+            
+            # Визуализация
+            print (df)
+            df.plot();
+            show()
+        '''
+print ("Всего наблюдаемых синтетиков ", count_ver)
+print ("Синтетики с хорошей оптимизацией ", count_ver_summ)
+print ("Синтетики которые выросли в фоварде ", count_ver_rost)
+print ("% выросших синтетиков из хороших ", toFixed(count_ver_rost/(count_ver_summ/100),2))
+print ('Суммарный профит = ',profit)
+print ('Мат ожидание = ',profit/count_ver_summ)
 collect_sintetic = pd.DataFrame(data=tmp_coll_sin)
-print(collect_sintetic["SKO"])
+#print(collect_sintetic["SKO"])
 '''
 tmp_collect_sintetic["DT"]=datatime
 tmp_collect_sintetic["Len"]=le
