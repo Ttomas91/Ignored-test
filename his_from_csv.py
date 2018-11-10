@@ -6,10 +6,10 @@ class history_from_csv:
 
         self.file="history/"+symbol+tf+".csv"
 
-    def get_history(self, date, time, len_bar, typ):
+    def get_history(self, datatime, len_bar, typ):
         
-        self.date=str(date)
-        self.time=str(time)
+        self.date=str(datatime[0])
+        self.time=str(datatime[1])
         self.len_bar=len_bar
         self.datas=0
         if typ=="Open":
